@@ -1,8 +1,7 @@
-package lib
+package base
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"strings"
 )
@@ -56,8 +55,7 @@ func ReadFromFile(path string) *AppSettings {
 		// TODO Remove the map and use reflection?
 		databaseURL := properties[DatabaseURL]
 		serviceUID := properties[ServiceUID]
-		credentialsFile := properties[ServiceUID]
-		log.Println(databaseURL)
+		credentialsFile := properties[CredentialsFile]
 
 		return &AppSettings{
 			DatabaseURL:     databaseURL,
