@@ -46,3 +46,8 @@ func (ctrl *retailers) Put() {
 func (ctrl *retailers) Delete() {
 	ctrl.Controller.Delete()
 }
+
+// BaseController instance
+func (ctrl *retailers) BaseController() *controller.Controller {
+	return &ctrl.Controller
+}

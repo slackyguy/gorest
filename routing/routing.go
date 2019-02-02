@@ -74,6 +74,12 @@ func RegisterAction(
 	}
 }
 
+// RegisterHandler - register a simple handler
+func RegisterHandler(path string, handler func(
+	response http.ResponseWriter, request *http.Request)) {
+	router.HandleFunc(path, handler)
+}
+
 func validate(
 	response http.ResponseWriter,
 	request *http.Request,
@@ -92,6 +98,12 @@ func validate(
 		AppSettings: appSettings,
 		Request:     request,
 		Response:    response}
+
+	// TODO Mover para a action de "login" apenas.
+	// Para os demais, a validação deve ser de OAuth
+	if !controller.BaseController().ValidateBasicAuthentication() {
+		return
+	}
 
 	target := factory(controller)
 	action(target)
