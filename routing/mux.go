@@ -14,8 +14,8 @@ type MuxRouter struct {
 }
 
 // NewMuxRouter creates a new MuxRouter
-func NewMuxRouter() MuxRouter {
-	return MuxRouter{router: mux.NewRouter()}
+func NewMuxRouter() *MuxRouter {
+	return &MuxRouter{router: mux.NewRouter()}
 }
 
 // RegisterRestfulHandlers registers route for a given context path

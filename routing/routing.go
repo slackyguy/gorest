@@ -61,7 +61,7 @@ func validate(
 	// }
 
 	target := factory(controller)
-	LoadParameters(request, controller)
+	LoadParameters(request, target)
 	action(target)
 }
 
@@ -72,7 +72,9 @@ func InvalidContentType(response http.ResponseWriter, request *http.Request) {
 }
 
 // LoadParameters loads parameters to controller
-func LoadParameters(request *http.Request, controller *controller.Controller) {
+func LoadParameters(request *http.Request, controller controller.Interface) {
+
+	baseController := controller.BaseController()
 
 	if request.Method == "GET" ||
 		request.Method == "PUT" ||
@@ -80,14 +82,15 @@ func LoadParameters(request *http.Request, controller *controller.Controller) {
 
 		path := strings.Split(
 			strings.Trim(request.URL.Path, "/"), "/")
+
 		if len(path) > 1 {
-			controller.MessageID = path[1]
+			baseController.MessageID = path[1]
 		}
 
 	}
 	if request.Method == "PUT" || request.Method == "POST" {
 
 		bytes, _ := ioutil.ReadAll(request.Body)
-		controller.Message = string(bytes)
+		baseController.Message = string(bytes)
 	}
 }

@@ -2,48 +2,61 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/slackyguy/gorest/base"
-	"github.com/slackyguy/gorest/routing"
-
 	"github.com/slackyguy/gorest/controller/examples"
+	"github.com/slackyguy/gorest/routing"
+	"google.golang.org/appengine"
+
 	"github.com/slackyguy/gorest/controller/oauth"
 	"github.com/slackyguy/gorest/controller/websocket"
-	"google.golang.org/appengine"
 )
 
 func main() {
 
-	routing.HTTP.RegisterHandler("/", func(response http.ResponseWriter, request *http.Request) {
-		if request.Method != "GET" {
-			http.Error(response, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+	// OBS: The references of packages with
+	// "DoNothing" only ensures that the respective
+	// package is loaded (calling the init() mehod).
+	// The order is also important:
+	// The "Router" is currently initialized
+	// by examples.init()
+	examples.DoNothing()
+	oauth.DoNothing()
+	websocket.DoNothing()
 
-		http.ServeFile(response, request, "home.html")
-	})
-
-	// OBS.:
-	// 1 - Assuming that controllers.init() is called first, the initialization
-	// of the router was delegated to that method.
-	// 2 - If running outside appengine, replace the Load() calls bellow for
-	// something with the corresponding init().
-	examples.Load()
-	oauth.Load()
-	websocket.Load()
 	routing.HTTP.Handle()
 
-	// running: dev_appserver.py app.yaml
+	// Option 1: Using http.ListenAndServe:
+	SetupBasicHTTPSettings()
+	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	// Option 2: Using AppEngine
+	// SetupAppEngineSettings()
+	// appengine.Main()
+
+	// "goapp.properties" example:
+	// databaseURL = https://[base].firebaseio.com
+	// serviceUID = [service-uid]
+	// credentialsFile = [credentials-file].json
+}
+
+// SetupBasicHTTPSettings setup http.ListenAndServe method
+func SetupBasicHTTPSettings() {
+
+	base.ApplicationSettings = base.GetFromFile("goapp.properties").SetContextFactory(
+		func(request *http.Request) context.Context {
+			return context.Background()
+		})
+}
+
+// SetupAppEngineSettings setup AppEngine method
+// running: dev_appserver.py app.yaml
+func SetupAppEngineSettings() {
+
 	base.ApplicationSettings = base.GetFromFile("goapp.properties").SetContextFactory(
 		func(request *http.Request) context.Context {
 			return appengine.NewContext(request)
 		})
-	appengine.Main()
-
-	// base.ApplicationSettings = base.GetFromFile("goapp.properties").SetContextFactory(
-	// 	func(request *http.Request) context.Context {
-	// 		return context.Background()
-	// 	})
-	//log.Fatal(http.ListenAndServe(":8080", nil))
 }

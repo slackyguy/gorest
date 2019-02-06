@@ -17,5 +17,5 @@ func init() {
 	})
 }
 
-// Load does nothins (workaround for appengine)
-func Load() {}
+// DoNothing (NOP)
+func DoNothing() {}

@@ -1,6 +1,8 @@
 package examples
 
 import (
+	"net/http"
+
 	"github.com/slackyguy/gopay/dao"
 	"github.com/slackyguy/gorest/controller"
 	"github.com/slackyguy/gorest/routing"
@@ -55,12 +57,19 @@ func (ctrl *retailers) BaseController() *controller.Controller {
 
 func init() {
 	routing.HTTP = routing.NewBasicRouter()
+	//routing.HTTP = routing.NewMuxRouter()
 
-	routing.HTTP.RegisterRestfulHandlers(
+	routing.HTTP.RegisterHandler(
+		"/", func(response http.ResponseWriter, request *http.Request) {
+			if request.Method != "GET" {
+				http.Error(response, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+
+			http.ServeFile(response, request, "home.html")
+		}).RegisterRestfulHandlers(
 		"retailers", newRetailersController("retailers"))
-	//.RegisterRestfulHandlers(
-	//"users", newUsersController("users"))
 }
 
-// Load does nothins (workaround for appengine)
-func Load() {}
+// DoNothing (NOP)
+func DoNothing() {}

@@ -14,9 +14,6 @@ import (
 	"gopkg.in/oauth2.v3/store"
 )
 
-// Load does nothins (workaround for appengine)
-func Load() {}
-
 func init() {
 	manager := manage.NewDefaultManager()
 	// token memory store
@@ -59,3 +56,6 @@ func init() {
 			srv.HandleTokenRequest(response, request)
 		})
 }
+
+// DoNothing (NOP)
+func DoNothing() {}
