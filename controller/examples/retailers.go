@@ -3,10 +3,16 @@ package examples
 import (
 	"net/http"
 
-	"github.com/slackyguy/gopay/dao"
 	"github.com/slackyguy/gorest/controller"
 	"github.com/slackyguy/gorest/routing"
 )
+
+// Retailer is a json-serializable type.
+type Retailer struct {
+	BusinessID  string `json:"business_id,omitempty"`
+	Description string `json:"description,omitempty"`
+	GeoCode     string `json:"geocode,omitempty"`
+}
 
 type retailers struct {
 	controller.Controller
@@ -17,8 +23,8 @@ func newRetailersController(collection string) func(
 	return func(baseController *controller.Controller) controller.Interface {
 		ctrl := new(retailers)
 		ctrl.Controller = *baseController
-		ctrl.Model = dao.Retailer{}
-		ctrl.MapModel = make(map[string]dao.Retailer)
+		ctrl.Model = Retailer{}
+		ctrl.MapModel = make(map[string]Retailer)
 		ctrl.Setup(collection)
 
 		return ctrl
