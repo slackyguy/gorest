@@ -25,10 +25,9 @@ func App(
 }
 
 // Client returns firebase client.
-func Client(
-	ctx context.Context,
-	appSettings *base.AppSettings) *db.Client {
+func Client(ctx context.Context) *db.Client {
 
+	appSettings := base.ApplicationSettings
 	conf, opt := firebaseSettings(appSettings)
 	app, errApp := firebase.NewApp(ctx, conf, opt)
 

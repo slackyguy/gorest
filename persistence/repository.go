@@ -2,14 +2,11 @@ package persistence
 
 import (
 	"context"
-
-	"github.com/slackyguy/gorest/base"
 )
 
 // Repository (data structure)
 type Repository struct {
-	AppSettings *base.AppSettings
-	Context     context.Context
+	Context context.Context
 }
 
 // Interface (repository contract)

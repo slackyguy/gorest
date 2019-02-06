@@ -3,6 +3,7 @@ package examples
 import (
 	"github.com/slackyguy/gopay/dao"
 	"github.com/slackyguy/gorest/controller"
+	"github.com/slackyguy/gorest/routing"
 )
 
 type retailers struct {
@@ -51,3 +52,15 @@ func (ctrl *retailers) Delete() {
 func (ctrl *retailers) BaseController() *controller.Controller {
 	return &ctrl.Controller
 }
+
+func init() {
+	routing.HTTP = routing.NewBasicRouter()
+
+	routing.HTTP.RegisterRestfulHandlers(
+		"retailers", newRetailersController("retailers"))
+	//.RegisterRestfulHandlers(
+	//"users", newUsersController("users"))
+}
+
+// Load does nothins (workaround for appengine)
+func Load() {}

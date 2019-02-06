@@ -17,7 +17,7 @@ type Repository struct {
 
 // SetCollectionName sets the collection name
 func (repo *Repository) SetCollectionName(collection string) {
-	repo.Client = Client(repo.Context, repo.AppSettings)
+	repo.Client = Client(repo.Context)
 	repo.collectionRef = collection
 }
 

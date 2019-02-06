@@ -2,6 +2,8 @@ package base
 
 import (
 	"bufio"
+	"context"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -17,6 +19,9 @@ const (
 
 // About enums using iota: https://golang.org/ref/spec#Iota
 
+// ApplicationSettings app settings (deve ser setado no módulo principal da aplicação)
+var ApplicationSettings *AppSettings
+
 // AppSettings represents application context
 type AppSettings struct {
 	// DatabaseURL represents database url
@@ -25,11 +30,13 @@ type AppSettings struct {
 	ServiceUID string
 	// CredentialsFile represents the path for the database credentials file
 	CredentialsFile string
+	// ContextFactory creates a new context
+	ContextFactory func(request *http.Request) context.Context
 }
 
-// ReadFromFile reads settings from file
+// GetFromFile reads settings from file
 // ex. "firebase.properties"
-func ReadFromFile(path string) *AppSettings {
+func GetFromFile(path string) *AppSettings {
 	// Debug working dir: os.Getwd()
 	file, err := os.Open(path)
 
@@ -65,4 +72,11 @@ func ReadFromFile(path string) *AppSettings {
 	}
 
 	return new(AppSettings)
+}
+
+// SetContextFactory sets the context factory
+func (settings *AppSettings) SetContextFactory(factory func(
+	request *http.Request) context.Context) *AppSettings {
+	settings.ContextFactory = factory
+	return settings
 }

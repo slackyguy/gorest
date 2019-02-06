@@ -1,86 +1,41 @@
 package routing
 
 import (
-	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/slackyguy/gorest/base"
 	"github.com/slackyguy/gorest/controller"
-	"google.golang.org/appengine"
 )
 
-var appSettings *base.AppSettings
-var router *mux.Router
+// HTTP http router interface
+var HTTP Router
 
-// Register registers route for a given context path
-func Register(
-	path string,
-	factory func(*controller.Controller) controller.Interface) {
-
-	if appSettings == nil {
-		appSettings = base.ReadFromFile("goapp.properties")
-	}
-
-	if router == nil {
-		router = mux.NewRouter()
-	}
-
-	router.HandleFunc(
-		fmt.Sprintf("/%s", path),
-		RegisterAction(path, factory,
-			func(controller controller.Interface) { controller.List() },
-		)).Methods("GET")
-
-	router.HandleFunc(
-		fmt.Sprintf("/%s/{id}", path),
-		RegisterAction(path, factory,
-			func(controller controller.Interface) { controller.Get() },
-		)).Methods("GET")
-
-	router.HandleFunc(
-		fmt.Sprintf("/%s", path),
-		RegisterAction(path, factory,
-			func(controller controller.Interface) { controller.Post() },
-		)).Methods("POST")
-
-	router.HandleFunc(
-		fmt.Sprintf("/%s/{id}", path),
-		RegisterAction(path, factory,
-			func(controller controller.Interface) { controller.Put() },
-		)).Methods("PUT")
-
-	router.HandleFunc(
-		fmt.Sprintf("/%s/{id}", path),
-		RegisterAction(path, factory,
-			func(controller controller.Interface) { controller.Delete() },
-		)).Methods("DELETE")
+// Router interface
+type Router interface {
+	RegisterRestfulHandlers(path string,
+		factory func(*controller.Controller) controller.Interface) Router
+	RegisterHandler(path string, handler func(
+		response http.ResponseWriter, request *http.Request)) Router
+	Handle()
 }
 
-// Routes return configured routes
-func Routes() *mux.Router {
-	return router
-}
-
-// RegisterAction - Generic action register
-func RegisterAction(
+// NewRequestHandler creates a request handler bound to an action
+func NewRequestHandler(
 	path string,
+	router Router,
 	factory func(*controller.Controller) controller.Interface,
 	action func(controller controller.Interface),
 ) func(response http.ResponseWriter, request *http.Request) {
 	return func(response http.ResponseWriter, request *http.Request) {
-		validate(response, request, factory, action)
+		validate(router, response, request, factory, action)
 	}
 }
 
-// RegisterHandler - register a simple handler
-func RegisterHandler(path string, handler func(
-	response http.ResponseWriter, request *http.Request)) {
-	router.HandleFunc(path, handler)
-}
-
 func validate(
+	router Router,
 	response http.ResponseWriter,
 	request *http.Request,
 	factory func(*controller.Controller) controller.Interface,
@@ -92,20 +47,21 @@ func validate(
 		InvalidContentType(response, request)
 	}
 
-	context := requestContext(request)
+	contextFactory := base.ApplicationSettings.ContextFactory
+	context := contextFactory(request)
 	controller := &controller.Controller{
-		Context:     context,
-		AppSettings: appSettings,
-		Request:     request,
-		Response:    response}
+		Context:  context,
+		Request:  request,
+		Response: response}
 
 	// TODO Mover para a action de "login" apenas.
 	// Para os demais, a validação deve ser de OAuth
-	if !controller.BaseController().ValidateBasicAuthentication() {
-		return
-	}
+	// if !controller.BaseController().ValidateBasicAuthentication() {
+	// 	return
+	// }
 
 	target := factory(controller)
+	LoadParameters(request, controller)
 	action(target)
 }
 
@@ -115,8 +71,23 @@ func InvalidContentType(response http.ResponseWriter, request *http.Request) {
 	fmt.Fprintln(response, "InvalidContentType")
 }
 
-func requestContext(request *http.Request) context.Context {
-	context := appengine.NewContext(request)
-	//context := context.Background()
-	return context
+// LoadParameters loads parameters to controller
+func LoadParameters(request *http.Request, controller *controller.Controller) {
+
+	if request.Method == "GET" ||
+		request.Method == "PUT" ||
+		request.Method == "DELETE" {
+
+		path := strings.Split(
+			strings.Trim(request.URL.Path, "/"), "/")
+		if len(path) > 1 {
+			controller.MessageID = path[1]
+		}
+
+	}
+	if request.Method == "PUT" || request.Method == "POST" {
+
+		bytes, _ := ioutil.ReadAll(request.Body)
+		controller.Message = string(bytes)
+	}
 }

@@ -14,7 +14,7 @@ import (
 	"gopkg.in/oauth2.v3/store"
 )
 
-// Load is workaround to appengine call init
+// Load does nothins (workaround for appengine)
 func Load() {}
 
 func init() {
@@ -45,17 +45,17 @@ func init() {
 		log.Println("Response Error:", re.Error.Error())
 	})
 
-	routing.RegisterHandler("/authorize", func(
-		response http.ResponseWriter, request *http.Request) {
-		err := srv.HandleAuthorizeRequest(response, request)
-		//err = srv.HandleAuthorizeRequest(w, r)
-		if err != nil {
-			http.Error(response, err.Error(), http.StatusBadRequest)
-		}
-	})
-
-	routing.RegisterHandler("/token", func(
-		response http.ResponseWriter, request *http.Request) {
-		srv.HandleTokenRequest(response, request)
-	})
+	routing.HTTP.RegisterHandler(
+		"/authorize", func(
+			response http.ResponseWriter, request *http.Request) {
+			err := srv.HandleAuthorizeRequest(response, request)
+			//err = srv.HandleAuthorizeRequest(w, r)
+			if err != nil {
+				http.Error(response, err.Error(), http.StatusBadRequest)
+			}
+		}).RegisterHandler(
+		"/token", func(
+			response http.ResponseWriter, request *http.Request) {
+			srv.HandleTokenRequest(response, request)
+		})
 }
